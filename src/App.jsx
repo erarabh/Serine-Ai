@@ -1,6 +1,4 @@
-// Serine AI - DeepSeek Chatbot MVP (React + TailwindCSS)
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SerineAI() {
   const [messages, setMessages] = useState([
@@ -9,10 +7,15 @@ export default function SerineAI() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Debugging: Print API Key (only in development)
+  useEffect(() => {
+    console.log("🔑 Loaded API Key:", import.meta.env.VITE_OPENROUTER_API_KEY);
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim()) return;
     const userMessage = { sender: 'user', text: input };
-    setMessages([...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
 
@@ -20,25 +23,36 @@ export default function SerineAI() {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer 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', // Replace with your real key
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1:free',
+          model: 'deepseek/deepseek-chat:free',
           messages: [
-            { role: 'system', content: 'You are a helpful, polite support assistant. Help customers with simple answers.' },
-            ...messages.map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text })),
+            { role: 'system', content: 'You are a helpful assistant.' },
+            ...messages.map(m => ({
+              role: m.sender === 'user' ? 'user' : 'assistant',
+              content: m.text
+            })),
             { role: 'user', content: input }
           ]
         })
       });
 
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("API Error:", error);
+        throw new Error(`API Error: ${response.status}`);
+      }
+
       const data = await response.json();
       const botReply = data.choices?.[0]?.message?.content || 'Sorry, I had trouble understanding that.';
       setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
     } catch (err) {
+      console.error("❌ Error communicating with AI:", err);
       setMessages(prev => [...prev, { sender: 'bot', text: 'Error talking to AI. Try again later.' }]);
     }
+
     setLoading(false);
   };
 
@@ -49,7 +63,9 @@ export default function SerineAI() {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`p-2 rounded-lg max-w-[80%] ${msg.sender === 'user' ? 'bg-blue-100 self-end ml-auto' : 'bg-gray-200'}`}
+            className={`p-2 rounded-lg max-w-[80%] ${
+              msg.sender === 'user' ? 'bg-blue-100 self-end ml-auto' : 'bg-gray-200'
+            }`}
           >
             {msg.text}
           </div>
@@ -74,3 +90,4 @@ export default function SerineAI() {
     </div>
   );
 }
+
