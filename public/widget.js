@@ -1,102 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>Serine AI Chat Widget Test</title>
+    <meta charset="UTF-8">
+    <title>Serine AI Chat Widget Example</title>
     <style>
-      /* Floating Icon Button */
+      /* Style for the floating icon button */
       #chat-toggle-btn {
         position: fixed;
         bottom: 20px;
         right: 20px;
         width: 60px;
         height: 60px;
-        background-color: #007BFF;
+        border-radius: 50%;
+        background-color: #007BFF; /* Change as needed */
         color: #fff;
         border: none;
-        border-radius: 50%;
-        font-size: 28px;
         cursor: pointer;
+        font-size: 28px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         z-index: 1000;
+        display: block; /* Ensure it is visible at first */
       }
-
-      /* Chat Window Container with Colored Border */
+      
+      /* The chat window container with a colored border */
       #chat-widget-container {
         position: fixed;
         bottom: 20px;
         right: 20px;
         width: 350px;
         height: 500px;
-        background: #fff;
-        border: 2px solid #007BFF; /* Colored Border */
-        border-radius: 8px;
+        display: none; /* Initially hidden */
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 2px solid #007BFF;  /* Colored border */
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
         z-index: 1001;
-        display: none; /* Hidden initially */
       }
-
-      /* Header for Chat Window */
+      
+      /* Header for the chat widget window */
       #chat-widget-header {
-        padding: 10px;
-        background: #007BFF;
+        background-color: #007BFF;
         color: #fff;
+        padding: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
-
-      /* Chat Content Area */
+      
+      /* Chat widget content area */
       #chat-widget-body {
-        height: calc(100% - 40px); /* Reserve space for header */
+        height: calc(100% - 40px); /* Adjust for header height */
         overflow-y: auto;
       }
-
-      /* Close Button Styling */
+      
+      /* Close button styling */
       #chat-close-btn {
         background: transparent;
-        border: none;
         color: #fff;
-        font-size: 20px;
+        border: none;
+        font-size: 18px;
         cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <!-- Floating Chat Icon Button -->
+    <!-- Floating chat icon button -->
     <button id="chat-toggle-btn">&#128172;</button>
-
-    <!-- Chat Window Container -->
+    
+    <!-- Chat widget container (remains hidden until the icon is clicked) -->
     <div id="chat-widget-container">
       <div id="chat-widget-header">
         <span>Serine AI Chatbot</span>
         <button id="chat-close-btn">&times;</button>
       </div>
       <div id="chat-widget-body">
-        <!-- widget.js will render the chat content here -->
+        <!-- The widget.js file will load the chat content here -->
       </div>
     </div>
-
-    <!-- Load widget.js normally using defer so it loads after the DOM is ready -->
-    <script src="https://serine-ai.vercel.app/widget.js" defer></script>
-
+    
+    <!-- Load your widget.js file -->
+    <script src="https://serine-ai.vercel.app/widget.js"></script>
     <script>
-      // Wait for widget.js to be available and the DOM to be ready.
-      document.addEventListener("DOMContentLoaded", function () {
-        // Widget configuration: update the siteId for each client.
-        var widgetOptions = {
-          siteId: "your-site-id-goes-here", // Replace with your actual client site ID
-          container: document.getElementById("chat-widget-body"),
-          autoOpen: false // Prevent the widget from opening on its own
-        };
-
-        // Check if widget.js loaded and exposes the SerineAIWidget object.
-        if (window.SerineAIWidget && typeof window.SerineAIWidget.init === "function") {
-          window.SerineAIWidget.init(widgetOptions);
-        } else {
-          console.error("SerineAIWidget.init is not available. Check that widget.js is working correctly.");
-        }
+      // Widget configuration options
+      var widgetOptions = {
+        siteId: "your-site-id-goes-here", // Replace with the actual site id
+        container: document.getElementById("chat-widget-body"),
+        autoOpen: false, // Ensures the widget does not open automatically on load
+        // Add additional options as needed
+      };
+      
+      // Initialize the widget if available
+      if (typeof SerineAIWidget !== "undefined" && typeof SerineAIWidget.init === "function") {
+        SerineAIWidget.init(widgetOptions);
+      } else {
+        console.error("SerineAIWidget or its init function is not defined. Please check your widget.js file.");
+      }
+      
+      // Toggle logic for opening and closing the chat window
+      var toggleBtn = document.getElementById("chat-toggle-btn");
+      var widgetContainer = document.getElementById("chat-widget-container");
+      var closeBtn = document.getElementById("chat-close-btn");
+      
+      // When the floating icon is clicked: show the chat window and hide the icon.
+      toggleBtn.addEventListener("click", function() {
+        widgetContainer.style.display = "block";
+        toggleBtn.style.display = "none";
       });
-
-      // Get DOM elements for toggling the chat widget.
-      var toggleBtn = document
+      
+      // When the close button is clicked: hide the chat window and show the icon.
+      closeBtn.addEventListener("click", function() {
+        widgetContainer.style.display = "none";
+        toggleBtn.style.display = "block";
+      });
+    </script>
+  </body>
+</html>
