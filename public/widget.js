@@ -9,7 +9,7 @@
     return;
   }
 
-  // Create widget container and set it initially hidden
+  // Create widget container
   const container = document.createElement('div');
   container.id = 'serine-widget';
   container.style.position = 'fixed';
@@ -24,10 +24,13 @@
   container.style.zIndex = '1000';
   // Apply a thicker border using the provided border color
   container.style.border = `4px solid ${borderColor}`;
-  // Initially hide the widget
-  container.style.display = 'none';
+  // Initial hidden state: zero opacity, slide down, no pointer events.
+  container.style.opacity = '0';
+  container.style.transform = 'translateY(50px)';
+  container.style.pointerEvents = 'none';
+  container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
 
-  // Create close button that hides (rather than removes) the widget container
+  // Create close button that hides (instead of removing) the widget container
   const closeBtn = document.createElement('button');
   closeBtn.innerText = '×';
   closeBtn.style.position = 'absolute';
@@ -39,18 +42,18 @@
   closeBtn.style.padding = '5px';
   closeBtn.style.cursor = 'pointer';
   
-  // When clicked, hide the container and run any global callback (to show toggle icon)
+  // When clicked, remove the "visible" class to hide (animate out) the widget.
   closeBtn.onclick = () => {
-    container.style.display = 'none';
-    // If a global callback is defined, call it so that the floating icon reappears
+    container.classList.remove('visible');
+    // Call global callback after transition completes (300ms)
     if (typeof window.onWidgetClose === 'function') {
-      window.onWidgetClose();
+      setTimeout(() => { window.onWidgetClose(); }, 300);
     }
   };
 
-  // Create an iframe that loads the chat interface
+  // Create an iframe to load the chat interface
   const iframe = document.createElement('iframe');
-  // Adjust the src URL as needed (e.g., production URL insteaad of localhost)
+  // Set the source URL (modify as needed for production)
   iframe.src = `http://localhost:5173/?siteid=${siteID}`;
   iframe.style.width = '100%';
   iframe.style.height = '100%';
@@ -63,11 +66,22 @@
   // Append the widget container to the document body
   document.body.appendChild(container);
 
-  // Optional: Listen for messages from the parent page (if needed)
+  // Append a style tag for the "visible" class so that when added, the widget appears.
+  const style = document.createElement('style');
+  style.innerHTML = `
+    #serine-widget.visible {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+      pointer-events: auto !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Optional: Listen for messages from the parent page if needed.
   window.addEventListener("message", (event) => {
     if (event.data.type === "widgetEvent") {
       console.log("Received message from main page:", event.data);
-      // Handle additional widget actions if necessary.
+      // Additional widget actions can be handled here.
     }
   });
 })();
