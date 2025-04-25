@@ -9,28 +9,49 @@
     return;
   }
 
-  // Create widget container
+  // Function to track events – here we simply log them.
+  function trackEvent(eventName, data) {
+    console.log(`Tracking event: ${eventName}`, data);
+    // In a real implementation, you might send an AJAX/Fetch call like:
+    // fetch('https://your-analytics-endpoint.com/track', { method: 'POST', body: JSON.stringify({ event: eventName, ...data }) });
+  }
+
+  // Create the widget container
   const container = document.createElement('div');
   container.id = 'serine-widget';
   container.style.position = 'fixed';
   container.style.bottom = '20px';
   container.style.right = '20px';
-  container.style.width = '300px';
   container.style.height = '400px';
   container.style.backgroundColor = '#fff';
   container.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
   container.style.borderRadius = '10px';
   container.style.overflow = 'hidden';
   container.style.zIndex = '1000';
-  // Apply a thicker border using the provided border color
   container.style.border = `4px solid ${borderColor}`;
-  // Initial hidden state: zero opacity, slide down, no pointer events.
   container.style.opacity = '0';
   container.style.transform = 'translateY(50px)';
   container.style.pointerEvents = 'none';
   container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+  // Insert the container into the DOM
+  container.style.display = 'block';
 
-  // Create close button that hides (instead of removing) the widget container
+  // Function to update container dimensions responsively
+  function updateContainerStyle() {
+    if (window.innerWidth < 640) {
+      container.style.width = '90%';
+      container.style.right = '5%';
+      container.style.left = '5%';
+    } else {
+      container.style.width = '300px';
+      container.style.right = '20px';
+      container.style.left = '';
+    }
+  }
+  updateContainerStyle();
+  window.addEventListener('resize', updateContainerStyle);
+
+  // Create close button
   const closeBtn = document.createElement('button');
   closeBtn.innerText = '×';
   closeBtn.style.position = 'absolute';
@@ -41,47 +62,60 @@
   closeBtn.style.border = 'none';
   closeBtn.style.padding = '5px';
   closeBtn.style.cursor = 'pointer';
-  
-  // When clicked, remove the "visible" class to hide (animate out) the widget.
   closeBtn.onclick = () => {
     container.classList.remove('visible');
-    // Call global callback after transition completes (300ms)
-    if (typeof window.onWidgetClose === 'function') {
-      setTimeout(() => { window.onWidgetClose(); }, 300);
-    }
+    trackEvent('widget_close', { timestamp: new Date().toISOString(), siteID });
+    setTimeout(() => {
+      container.style.display = 'none';
+      if (typeof window.onWidgetClose === 'function') {
+        window.onWidgetClose();
+      }
+    }, 300);
   };
 
-  // Create an iframe to load the chat interface
+  // Create an iframe for the chat interface
   const iframe = document.createElement('iframe');
-  // Set the source URL (modify as needed for production)
+  // For testing: leave the URL as localhost (update accordingly for production)
   iframe.src = `http://localhost:5173/?siteid=${siteID}`;
   iframe.style.width = '100%';
   iframe.style.height = '100%';
   iframe.style.border = 'none';
 
-  // Append the close button and iframe to the container
+  // Append close button and iframe to the container
   container.appendChild(closeBtn);
   container.appendChild(iframe);
-
-  // Append the widget container to the document body
   document.body.appendChild(container);
 
-  // Append a style tag for the "visible" class so that when added, the widget appears.
+  // Add a style element for the visible class (CSS transitions)
   const style = document.createElement('style');
   style.innerHTML = `
     #serine-widget.visible {
       opacity: 1 !important;
       transform: translateY(0) !important;
       pointer-events: auto !important;
+      display: block !important;
     }
   `;
   document.head.appendChild(style);
 
-  // Optional: Listen for messages from the parent page if needed.
+  // Expose a global function to show the widget.
+  window.showSerineWidget = function () {
+    console.log("showSerineWidget called");
+    container.style.display = 'block';
+    setTimeout(() => {
+      container.classList.add("visible");
+      trackEvent('widget_open', { timestamp: new Date().toISOString(), siteID });
+      console.log("Widget should now be visible");
+    }, 10);
+  };
+
+  // Optional: listen for messages from the parent page and track them.
   window.addEventListener("message", (event) => {
     if (event.data.type === "widgetEvent") {
-      console.log("Received message from main page:", event.data);
-      // Additional widget actions can be handled here.
+      console.log("Received message from parent page:", event.data);
+      trackEvent('widget_message', { data: event.data, timestamp: new Date().toISOString(), siteID });
     }
   });
+
+  console.log("widget.js loaded. window.showSerineWidget =", typeof window.showSerineWidget);
 })();
