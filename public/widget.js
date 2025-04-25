@@ -9,14 +9,27 @@
     return;
   }
 
-  // Function to track events – here we simply log them.
+  // Function to track events – now it sends messages to an API (like mailing a letter)
   function trackEvent(eventName, data) {
+    // First, write the message in our secret notebook (console)
     console.log(`Tracking event: ${eventName}`, data);
-    // In a real implementation, you might send an AJAX/Fetch call like:
-    // fetch('https://your-analytics-endpoint.com/track', { method: 'POST', body: JSON.stringify({ event: eventName, ...data }) });
+    // Now, send that message to your analytics server using an API call.
+    fetch('https://your-analytics-endpoint.com/track', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        event: eventName,
+        data: data
+      })
+    })
+    .then(response => response.json())
+    .then(result => console.log("Event sent:", result))
+    .catch(error => console.error("Error sending event:", error));
   }
 
-  // Create the widget container
+  // Create widget container (the little chat box that appears)
   const container = document.createElement('div');
   container.id = 'serine-widget';
   container.style.position = 'fixed';
@@ -33,7 +46,7 @@
   container.style.transform = 'translateY(50px)';
   container.style.pointerEvents = 'none';
   container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-  // Insert the container into the DOM
+  // Ensure the container is in the DOM
   container.style.display = 'block';
 
   // Function to update container dimensions responsively
@@ -51,7 +64,7 @@
   updateContainerStyle();
   window.addEventListener('resize', updateContainerStyle);
 
-  // Create close button
+  // Create close button that hides the widget
   const closeBtn = document.createElement('button');
   closeBtn.innerText = '×';
   closeBtn.style.position = 'absolute';
@@ -73,20 +86,20 @@
     }, 300);
   };
 
-  // Create an iframe for the chat interface
+  // Create an iframe to load the chat interface (this is your chatbot)
   const iframe = document.createElement('iframe');
-  // For testing: leave the URL as localhost (update accordingly for production)
+  // For testing, the URL is set to localhost; update if needed for production
   iframe.src = `http://localhost:5173/?siteid=${siteID}`;
   iframe.style.width = '100%';
   iframe.style.height = '100%';
   iframe.style.border = 'none';
 
-  // Append close button and iframe to the container
+  // Append the close button and iframe to the widget container
   container.appendChild(closeBtn);
   container.appendChild(iframe);
   document.body.appendChild(container);
 
-  // Add a style element for the visible class (CSS transitions)
+  // Insert a style element for the "visible" class to handle transitions
   const style = document.createElement('style');
   style.innerHTML = `
     #serine-widget.visible {
@@ -109,7 +122,7 @@
     }, 10);
   };
 
-  // Optional: listen for messages from the parent page and track them.
+  // Optional: Listen for messages from the parent page (if needed) and track them.
   window.addEventListener("message", (event) => {
     if (event.data.type === "widgetEvent") {
       console.log("Received message from parent page:", event.data);
