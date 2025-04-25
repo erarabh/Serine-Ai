@@ -14,7 +14,7 @@
     // First, write the message in our secret notebook (console)
     console.log(`Tracking event: ${eventName}`, data);
     // Now, send that message to your analytics server using an API call.
-    fetch('https://your-analytics-endpoint.com/track', {
+   /* fetch('https://your-analytics-endpoint.com/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -26,7 +26,7 @@
     })
     .then(response => response.json())
     .then(result => console.log("Event sent:", result))
-    .catch(error => console.error("Error sending event:", error));
+    .catch(error => console.error("Error sending event:", error));*/
   }
 
   // Create widget container (the little chat box that appears)
