@@ -131,8 +131,8 @@
   });
 
   console.log("widget.js loaded. window.showSerineWidget =", typeof window.showSerineWidget);
-<<<<<<< HEAD
+			
+	 
+	   
 })();
-=======
-})();
->>>>>>> 7c18b8ce0280ba1f3f9ab03ef41f36d625705dbf
+												
