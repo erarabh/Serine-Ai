@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/chat': {
-        target: 'http://localhost:5000',
+        target: 'https://serine-ai-backend-production.up.railway.app',
         changeOrigin: true,
         secure: false,
       },
