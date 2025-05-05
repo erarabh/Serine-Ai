@@ -1,0 +1,13 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; connect-src 'self' https://serine-ai-backend-production.up.railway.app; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        }
+      ]
+    }
+  ]
+}
