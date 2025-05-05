@@ -131,8 +131,12 @@
   });
 
   console.log("widget.js loaded. window.showSerineWidget =", typeof window.showSerineWidget);
+<<<<<<< HEAD
 			
 	 
 	   
 })();
 												
+=======
+})();
+>>>>>>> fc4137e (Updated API calls to use Railway backend)
