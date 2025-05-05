@@ -18,19 +18,19 @@ export default function ChatUI() {
 
     try {
       // Updated URL: use relative endpoint so that Vite's proxy takes effect.
-	  const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
-      const response = await fetch(`${API_URL}/chat`, {
+	const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
+
+const response = await fetch(`${API_URL}/chat`, {
   method: "POST",
-			
   headers: { "Content-Type": "application/json" },
-	
-						
-  body: JSON.stringify({ messages: updatedMessages.map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
+  body: JSON.stringify({
+    messages: updatedMessages.map((msg) => ({
+      role: msg.sender === "user" ? "user" : "assistant",
       content: msg.text,
     })),
   }),
 });
+
 
       if (!response.ok) {
         const errorText = await response.text();

@@ -16,5 +16,8 @@ export default defineConfig({
       "Content-Security-Policy": "default-src 'self'; connect-src 'self' https://serine-ai-backend-production.up.railway.app;",
     }
   },
+  define: {
+    "process.env.VITE_API_URL": JSON.stringify("https://serine-ai-backend-production.up.railway.app"),
+  },		   
 });
 
