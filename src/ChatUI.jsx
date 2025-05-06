@@ -1,12 +1,26 @@
-import { useState } from 'react';
-import ReactMarkdown from 'react-markdown'; // Add this at the top
+import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown'; // For rendering Markdown formatting
 
 export default function ChatUI() {
+  // Initialize with a default welcome message
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi, I’m Serine AI. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // On component mount, load the stored chat history (last 5 messages) from localStorage
+  useEffect(() => {
+    const storedMessages = localStorage.getItem("chatHistory");
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
+    }
+  }, []);
+
+  // Whenever messages state updates, store the last 5 messages to localStorage
+  useEffect(() => {
+    localStorage.setItem("chatHistory", JSON.stringify(messages.slice(-5)));
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -18,41 +32,45 @@ export default function ChatUI() {
     setLoading(true);
 
     try {
-      // Updated URL: use relative endpoint so that Vite's proxy takes effect.
-	const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
-    // Start timing the API call
+      // Use relative endpoint so that Vite's proxy takes effect if configured.
+      const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
+
+      // Start timing the API call
       const startTime = performance.now();
-		   
-const response = await fetch(`${API_URL}/chat`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    messages: updatedMessages.map((msg) => ({
-      role: msg.sender === "user" ? "user" : "assistant",
-      content: msg.text,
-    })),
-  }),
-});
 
-const endTime = performance.now(); // End timing
-console.log(`AI Response Time: ${endTime - startTime}ms`);
+      const response = await fetch(`${API_URL}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: updatedMessages.map((msg) => ({
+            role: msg.sender === "user" ? "user" : "assistant",
+            content: msg.text,
+          })),
+        }),
+      });
 
-															   
+      // End timing the API call
+      const endTime = performance.now();
+      console.log(`API Response Time: ${endTime - startTime}ms`);
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Server returned error:', response.status, errorText);
+        setMessages((prev) => [
+          ...prev,
+          { sender: 'bot', text: "I'm sorry, I didn't understand that. Can you rephrase?" }
+        ]);
+      } else {
+        // Process a successful response.
+        const data = await response.json();
+        const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
+        setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
       }
-									 
-      const data = await response.json();
-      const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
-      setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
-	   
     } catch (err) {
       console.error('❌ API Error:', err);
-														 
       setMessages((prev) => [
         ...prev,
-        { sender: 'bot', text: '⚠️ Error talking to server.' },
+        { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
       ]);
     }
 
@@ -73,12 +91,12 @@ console.log(`AI Response Time: ${endTime - startTime}ms`);
             }`}
           >
             {msg.sender === 'bot' ? (
-  <ReactMarkdown className="prose prose-sm">{msg.text}</ReactMarkdown>
-						  
-							  
-) : (
-  msg.text
-)}
+              <ReactMarkdown className="prose prose-sm">
+                {msg.text}
+              </ReactMarkdown>
+            ) : (
+              msg.text
+            )}
           </div>
         ))}
       </div>
