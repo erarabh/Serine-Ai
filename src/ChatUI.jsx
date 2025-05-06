@@ -8,7 +8,7 @@ export default function ChatUI() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-    const sendMessage = async () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = { sender: 'user', text: input };
@@ -24,7 +24,7 @@ export default function ChatUI() {
       // Start timing the API call
       const startTime = performance.now();
 
-      // Fetch call – try one immediate attempt and, if it fails, one extra attempt after a brief (300ms) delay.
+      // Fetch call – one immediate attempt and, if it fails, one extra attempt after a brief (300ms) delay.
       let response;
       try {
         response = await fetch(`${API_URL}/chat`, {
@@ -52,7 +52,7 @@ export default function ChatUI() {
         });
       }
 
-      // End timing the API call
+      // End timing the API call and log the response time.
       const endTime = performance.now();
       console.log(`API Response Time: ${endTime - startTime}ms`);
 
@@ -72,7 +72,6 @@ export default function ChatUI() {
       }
     } catch (err) {
       console.error('❌ API Error:', err);
-			   
       setMessages((prev) => [
         ...prev,
         { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
@@ -97,7 +96,7 @@ export default function ChatUI() {
           >
             {msg.sender === 'bot' ? (
               <ReactMarkdown className="prose prose-sm">
-                {formatBotMarkdown(msg.text)}
+                {msg.text}
               </ReactMarkdown>
             ) : (
               msg.text
