@@ -9,6 +9,12 @@ export default function ChatUI() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+// ✅ Save messages helper
+const saveMessages = (messages, max = 5) => {
+  const lastMessages = messages.length <= max ? messages : messages.slice(-max);
+  localStorage.setItem("chatHistory", JSON.stringify(lastMessages));
+};
+
   // On component mount, load the stored chat history (last 5 messages) from localStorage
   useEffect(() => {
     const storedMessages = localStorage.getItem("chatHistory");
@@ -17,10 +23,10 @@ export default function ChatUI() {
     }
   }, []);
 
-  // Whenever messages state updates, store the last 5 messages to localStorage
-  useEffect(() => {
-    localStorage.setItem("chatHistory", JSON.stringify(messages.slice(-5)));
-  }, [messages]);
+ // ✅ Save on each message update
+useEffect(() => {
+  saveMessages(messages);
+}, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
