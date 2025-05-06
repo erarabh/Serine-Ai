@@ -66,7 +66,7 @@ const response = await fetch(`${API_URL}/chat`, {
             }`}
           >
             {msg.sender === 'bot' ? (
-  <ReactMarkdown className="prose">{msg.text}</ReactMarkdown>
+  <ReactMarkdown className="prose prose-sm">{msg.text}</ReactMarkdown>
 ) : (
   msg.text
 )}
