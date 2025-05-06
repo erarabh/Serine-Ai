@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown'; // Add this at the top
 
 export default function ChatUI() {
   const [messages, setMessages] = useState([
@@ -64,7 +65,11 @@ const response = await fetch(`${API_URL}/chat`, {
                 : 'bg-gray-200'
             }`}
           >
-            {msg.text}
+            {msg.sender === 'bot' ? (
+  <ReactMarkdown className="prose">{msg.text}</ReactMarkdown>
+) : (
+  msg.text
+)}
           </div>
         ))}
       </div>
