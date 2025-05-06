@@ -89,7 +89,7 @@
   // Create an iframe to load the chat interface (this is your chatbot)
   const iframe = document.createElement('iframe');
   // For testing, the URL is set to localhost; update if needed for production
-  iframe.src = `http://localhost:5173/?siteid=${siteID}`;
+  iframe.src = `https://serine-ai.vercel.app/?siteid=${siteID}`;
   iframe.style.width = '100%';
   iframe.style.height = '100%';
   iframe.style.border = 'none';
