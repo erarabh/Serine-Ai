@@ -2,11 +2,29 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown'; // For rendering Markdown formatting
 
 export default function ChatUI() {
+  // Initial chatbot message
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi, I’m Serine AI. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Helper function to transform bullet list items ("-") to numbered list items.
+  function formatBotMarkdown(text) {
+    // Split text by newlines
+    const lines = text.split("\n");
+    let counter = 1;
+    // Process each line: if it starts with "-" then replace it with "number. "
+    const formattedLines = lines.map(line => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("-")) {
+        const content = trimmed.replace(/^-\s*/, "");  // remove the leading dash and whitespace
+        return `${counter++}. ${content}`;
+      }
+      return line;
+    });
+    return formattedLines.join("\n");
+  }
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -56,7 +74,7 @@ export default function ChatUI() {
         3
       );
 
-      // End timing the API call
+      // End timing the API call and log the response time.
       const endTime = performance.now();
       console.log(`API Response Time: ${endTime - startTime}ms`);
 
@@ -71,13 +89,13 @@ export default function ChatUI() {
         console.error('❌ Server returned error:', response.status, errorText);
       }
 
-      // Process the response and apply fallback if needed.
+      // Process the API response JSON; apply fallback if needed.
       const data = await response.json();
       const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
       setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
     } catch (err) {
       console.error('❌ API Error:', err);
-      // In case of error, show a fallback error message.
+      // Show fallback error message.
       setMessages((prev) => [
         ...prev,
         { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
@@ -101,7 +119,8 @@ export default function ChatUI() {
             }`}
           >
             {msg.sender === 'bot' ? (
-              <ReactMarkdown className="prose prose-sm">{msg.text}</ReactMarkdown>
+              // Pass bot text through our formatter before rendering.
+              <ReactMarkdown className="prose prose-sm">{formatBotMarkdown(msg.text)}</ReactMarkdown>
             ) : (
               msg.text
             )}
