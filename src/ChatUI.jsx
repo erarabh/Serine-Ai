@@ -2,31 +2,13 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown'; // For rendering Markdown formatting
 
 export default function ChatUI() {
-  // Initial chatbot message
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi, I’m Serine AI. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Helper function to transform bullet list items ("-") to numbered list items.
-  function formatBotMarkdown(text) {
-    // Split text by newlines
-    const lines = text.split("\n");
-    let counter = 1;
-    // Process each line: if it starts with "-" then replace it with "number. "
-    const formattedLines = lines.map(line => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("-")) {
-        const content = trimmed.replace(/^-\s*/, "");  // remove the leading dash and whitespace
-        return `${counter++}. ${content}`;
-      }
-      return line;
-    });
-    return formattedLines.join("\n");
-  }
-
-  const sendMessage = async () => {
+    const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = { sender: 'user', text: input };
@@ -42,26 +24,10 @@ export default function ChatUI() {
       // Start timing the API call
       const startTime = performance.now();
 
-      // Exponential backoff retry function (up to 3 attempts)
-      async function fetchWithRetry(url, options, retries = 3) {
-        for (let i = 0; i < retries; i++) {
-          try {
-            const response = await fetch(url, options);
-            if (response.ok) {
-              return response;
-            }
-          } catch (error) {
-            console.warn(`Fetch attempt ${i + 1} failed.`);
-          }
-          // Delay increases with each retry (500ms, 1000ms, 1500ms, etc.)
-          await new Promise((res) => setTimeout(res, 500 * (i + 1)));
-        }
-        return null;
-      }
-
-      const response = await fetchWithRetry(
-        `${API_URL}/chat`,
-        {
+      // Fetch call – try one immediate attempt and, if it fails, one extra attempt after a brief (300ms) delay.
+      let response;
+      try {
+        response = await fetch(`${API_URL}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -70,32 +36,43 @@ export default function ChatUI() {
               content: msg.text,
             })),
           }),
-        },
-        3
-      );
+        });
+      } catch (error) {
+        console.warn("First fetch attempt failed, retrying after 300ms...");
+        await new Promise((res) => setTimeout(res, 300)); // Short delay
+        response = await fetch(`${API_URL}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: updatedMessages.map((msg) => ({
+              role: msg.sender === "user" ? "user" : "assistant",
+              content: msg.text,
+            })),
+          }),
+        });
+      }
 
-      // End timing the API call and log the response time.
+      // End timing the API call
       const endTime = performance.now();
       console.log(`API Response Time: ${endTime - startTime}ms`);
 
-      // If no successful response was obtained after retries, throw an error.
-      if (!response) {
-        throw new Error("Failed after multiple attempts.");
+      // If the response is missing or not OK, log the error and display a fallback message.
+      if (!response || !response.ok) {
+        const errorText = response ? await response.text() : "No response";
+        console.error('❌ Server returned error:', response ? response.status : 'no response', errorText);
+        setMessages((prev) => [
+          ...prev,
+          { sender: 'bot', text: "I'm sorry, I didn't understand that. Can you rephrase?" }
+        ]);
+      } else {
+        // Process a successful response.
+        const data = await response.json();
+        const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
+        setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
       }
-
-      // Check for non-OK status even if response was received.
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server returned error:', response.status, errorText);
-      }
-
-      // Process the API response JSON; apply fallback if needed.
-      const data = await response.json();
-      const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
-      setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
     } catch (err) {
       console.error('❌ API Error:', err);
-      // Show fallback error message.
+			   
       setMessages((prev) => [
         ...prev,
         { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
@@ -119,8 +96,9 @@ export default function ChatUI() {
             }`}
           >
             {msg.sender === 'bot' ? (
-              // Pass bot text through our formatter before rendering.
-              <ReactMarkdown className="prose prose-sm">{formatBotMarkdown(msg.text)}</ReactMarkdown>
+              <ReactMarkdown className="prose prose-sm">
+                {formatBotMarkdown(msg.text)}
+              </ReactMarkdown>
             ) : (
               msg.text
             )}
