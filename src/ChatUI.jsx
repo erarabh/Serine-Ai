@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown'; // Add this at the top
+import ReactMarkdown from 'react-markdown'; // For rendering Markdown formatting
 
 export default function ChatUI() {
   const [messages, setMessages] = useState([
@@ -18,34 +18,69 @@ export default function ChatUI() {
     setLoading(true);
 
     try {
-      // Updated URL: use relative endpoint so that Vite's proxy takes effect.
-	const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
+      // Use relative endpoint so that Vite's proxy takes effect if configured.
+      const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
 
-const response = await fetch(`${API_URL}/chat`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    messages: updatedMessages.map((msg) => ({
-      role: msg.sender === "user" ? "user" : "assistant",
-      content: msg.text,
-    })),
-  }),
-});
+      // Start timing the API call
+      const startTime = performance.now();
 
+      // Exponential backoff retry function (up to 3 attempts)
+      async function fetchWithRetry(url, options, retries = 3) {
+        for (let i = 0; i < retries; i++) {
+          try {
+            const response = await fetch(url, options);
+            if (response.ok) {
+              return response;
+            }
+          } catch (error) {
+            console.warn(`Fetch attempt ${i + 1} failed.`);
+          }
+          // Delay increases with each retry (500ms, 1000ms, 1500ms, etc.)
+          await new Promise((res) => setTimeout(res, 500 * (i + 1)));
+        }
+        return null;
+      }
 
+      const response = await fetchWithRetry(
+        `${API_URL}/chat`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: updatedMessages.map((msg) => ({
+              role: msg.sender === "user" ? "user" : "assistant",
+              content: msg.text,
+            })),
+          }),
+        },
+        3
+      );
+
+      // End timing the API call
+      const endTime = performance.now();
+      console.log(`API Response Time: ${endTime - startTime}ms`);
+
+      // If no successful response was obtained after retries, throw an error.
+      if (!response) {
+        throw new Error("Failed after multiple attempts.");
+      }
+
+      // Check for non-OK status even if response was received.
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Server returned error:', response.status, errorText);
       }
 
+      // Process the response and apply fallback if needed.
       const data = await response.json();
-      const botReply = data?.message || 'No response received.';
+      const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
       setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
     } catch (err) {
       console.error('❌ API Error:', err);
+      // In case of error, show a fallback error message.
       setMessages((prev) => [
         ...prev,
-        { sender: 'bot', text: '⚠️ Error talking to server.' },
+        { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
       ]);
     }
 
@@ -66,10 +101,10 @@ const response = await fetch(`${API_URL}/chat`, {
             }`}
           >
             {msg.sender === 'bot' ? (
-  <ReactMarkdown className="prose prose-sm">{msg.text}</ReactMarkdown>
-) : (
-  msg.text
-)}
+              <ReactMarkdown className="prose prose-sm">{msg.text}</ReactMarkdown>
+            ) : (
+              msg.text
+            )}
           </div>
         ))}
       </div>
