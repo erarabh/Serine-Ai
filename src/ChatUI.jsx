@@ -1,21 +1,19 @@
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown'; // For rendering Markdown formatting
-
+import ReactMarkdown from 'react-markdown'; 
 export default function ChatUI() {
-  // Initialize with a default welcome message
+
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi, I’m Serine AI. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-// ✅ Save messages helper
+
 const saveMessages = (messages, max = 5) => {
   const lastMessages = messages.length <= max ? messages : messages.slice(-max);
   localStorage.setItem("chatHistory", JSON.stringify(lastMessages));
 };
 
-  // On component mount, load the stored chat history (last 5 messages) from localStorage
   useEffect(() => {
     const storedMessages = localStorage.getItem("chatHistory");
     if (storedMessages) {
@@ -23,11 +21,10 @@ const saveMessages = (messages, max = 5) => {
     }
   }, []);
 
- // ✅ Save on each message update
 useEffect(() => {
   const saveDelay = setTimeout(() => {
     saveMessages(messages);
-  }, 500); // ⏳ Only saves after 500ms of inactivity
+  }, 500); 
   return () => clearTimeout(saveDelay);
   if (messages.length > 0) {
     saveMessages(messages);
@@ -39,8 +36,7 @@ useEffect(() => {
 
   const userMessage = { sender: 'user', text: input };
   
-  // ✅ Update messages instantly before API call  
-  setMessages(prevMessages => [...prevMessages, userMessage]);
+    setMessages(prevMessages => [...prevMessages, userMessage]);
 
   setInput('');
   setLoading(true);
@@ -48,7 +44,7 @@ useEffect(() => {
   try {
     const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
 
-    // Start timing the API call
+    
     const startTime = performance.now();
 
     const response = await fetch(`${API_URL}/chat`, {
@@ -62,7 +58,7 @@ useEffect(() => {
       }),
     });
 
-    // End timing the API call
+   
     const endTime = performance.now();
     console.log(`API Response Time: ${endTime - startTime}ms`);
 
@@ -71,7 +67,7 @@ useEffect(() => {
       console.error('❌ Server returned error:', response.status, errorText);
       setMessages(prev => [...prev, { sender: 'bot', text: "I'm sorry, I didn't understand that. Can you rephrase?" }]);
     } else {
-      // Process a successful response.
+      
       const data = await response.json();
       const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
       setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
@@ -114,18 +110,18 @@ useEffect(() => {
   value={input}
   onChange={(e) => setInput(e.target.value)}
   onKeyDown={(e) => {
-    // Trigger sendMessage only if not loading and Enter is pressed.
+    
     if (e.key === 'Enter' && !loading) {
       sendMessage();
     }
   }}
-  disabled={loading}  // Disable the input field when loading
+  disabled={loading}  
   className="flex-1 border border-gray-300 rounded px-3 py-2"
   placeholder="Type your question..."
 />
 <button
   onClick={sendMessage}
-  disabled={loading}  // Disable the send button when loading
+  disabled={loading}  
   className={`bg-blue-600 text-white px-4 py-2 rounded ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
 >
   Send
