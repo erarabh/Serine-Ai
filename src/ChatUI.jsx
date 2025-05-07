@@ -111,18 +111,26 @@ useEffect(() => {
       {loading && <div className="mt-2 text-sm text-gray-500">Thinking...</div>}
       <div className="mt-4 flex gap-2">
         <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          className="flex-1 border border-gray-300 rounded px-3 py-2"
-          placeholder="Type your question..."
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Send
-        </button>
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={(e) => {
+    // Trigger sendMessage only if not loading and Enter is pressed.
+    if (e.key === 'Enter' && !loading) {
+      sendMessage();
+    }
+  }}
+  disabled={loading}  // Disable the input field when loading
+  className="flex-1 border border-gray-300 rounded px-3 py-2"
+  placeholder="Type your question..."
+/>
+<button
+  onClick={sendMessage}
+  disabled={loading}  // Disable the send button when loading
+  className={`bg-blue-600 text-white px-4 py-2 rounded ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
+>
+  Send
+</button>
+
       </div>
     </div>
   );
