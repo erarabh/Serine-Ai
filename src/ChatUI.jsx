@@ -25,63 +25,65 @@ const saveMessages = (messages, max = 5) => {
 
  // ✅ Save on each message update
 useEffect(() => {
-  saveMessages(messages);
+  const saveDelay = setTimeout(() => {
+    saveMessages(messages);
+  }, 500); // ⏳ Only saves after 500ms of inactivity
+  return () => clearTimeout(saveDelay);
+  if (messages.length > 0) {
+    saveMessages(messages);
+  }
 }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    const userMessage = { sender: 'user', text: input };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInput('');
-    setLoading(true);
+  const userMessage = { sender: 'user', text: input };
+  
+  // ✅ Update messages instantly before API call  
+  setMessages(prevMessages => [...prevMessages, userMessage]);
 
-    try {
-      // Use relative endpoint so that Vite's proxy takes effect if configured.
-      const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
+  setInput('');
+  setLoading(true);
 
-      // Start timing the API call
-      const startTime = performance.now();
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
 
-      const response = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages.map((msg) => ({
-            role: msg.sender === "user" ? "user" : "assistant",
-            content: msg.text,
-          })),
-        }),
-      });
+    // Start timing the API call
+    const startTime = performance.now();
 
-      // End timing the API call
-      const endTime = performance.now();
-      console.log(`API Response Time: ${endTime - startTime}ms`);
+    const response = await fetch(`${API_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [...messages, userMessage].map((msg) => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.text,
+        })),
+      }),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server returned error:', response.status, errorText);
-        setMessages((prev) => [
-          ...prev,
-          { sender: 'bot', text: "I'm sorry, I didn't understand that. Can you rephrase?" }
-        ]);
-      } else {
-        // Process a successful response.
-        const data = await response.json();
-        const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
-        setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
-      }
-    } catch (err) {
-      console.error('❌ API Error:', err);
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
-      ]);
+    // End timing the API call
+    const endTime = performance.now();
+    console.log(`API Response Time: ${endTime - startTime}ms`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Server returned error:', response.status, errorText);
+      setMessages(prev => [...prev, { sender: 'bot', text: "I'm sorry, I didn't understand that. Can you rephrase?" }]);
+    } else {
+      // Process a successful response.
+      const data = await response.json();
+      const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
+      setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
     }
+  } catch (err) {
+    console.error('❌ API Error:', err);
+    setMessages(prev => [...prev, { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' }]);
+  }
 
-    setLoading(false);
-  };
+  setLoading(false);
+};
+
 
   return (
     <div className="max-w-2xl mx-auto p-4 min-h-screen bg-gray-50 text-gray-800">
