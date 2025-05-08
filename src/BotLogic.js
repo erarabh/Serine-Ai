@@ -18,38 +18,37 @@
  */
 
 export async function sendChatMessage({ clientId, sessionId, message }) {
-  // Build the payload with the necessary multi-tenant identifiers.
+  // Modify payload to include a "messages" array
   const payload = {
-    clientId, // Provided via the embed code on the client's website.
-    sessionId: sessionId || null, // For anonymous users; backend generates if null.
-    userMessage: message,
+    clientId,
+    sessionId: sessionId || null,
+    messages: [
+      {
+        role: "user",
+        content: message,
+      },
+    ],
   };
 
-  // Construct the API endpoint.
-  // This URL should point to your production backend (e.g., Railway-hosted).
-  const apiEndpoint = `${process.env.VITE_API_URL}/chat`; // e.g., https://your-railway-app.com/chat
+  // Use your production backend URL from the environment variable
+  const apiEndpoint = `${process.env.VITE_API_URL}/chat`;
 
   try {
-    // Make the API call to the /chat endpoint.
     const response = await fetch(apiEndpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    // Handle error cases.
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`API error: ${response.status} - ${errorText}`);
     }
-
-    // Parse and return the JSON response.
     const data = await response.json();
-    return data; // Expecting something like { message: "bot reply", sessionId: "generated-session-id", ... }
+    return data; // Expected to be like { message: "bot reply", sessionId: "new-session-id", ... }
   } catch (error) {
     console.error("Error in sendChatMessage:", error);
     throw error;
   }
 }
+
