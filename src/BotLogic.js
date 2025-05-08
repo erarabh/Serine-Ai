@@ -8,7 +8,7 @@
  * - Build the payload, including multi-tenant details (clientId, sessionId).
  * - Make a POST request to the /chat API endpoint.
  * - Return the processed response.
- * 
+ *
  * Multi-Tenant & Hybrid Considerations:
  * - Each request must include a `clientId` that’s provided in the embed code.
  * - A `sessionId` is passed if available; if not, the backend will generate one.
@@ -20,21 +20,21 @@
 export async function sendChatMessage({ clientId, sessionId, message }) {
   // Build the payload with the necessary multi-tenant identifiers.
   const payload = {
-    clientId,               // Provided via the embed code on the client's website.
+    clientId, // Provided via the embed code on the client's website.
     sessionId: sessionId || null, // For anonymous users; backend generates if null.
     userMessage: message,
   };
 
   // Construct the API endpoint.
   // This URL should point to your production backend (e.g., Railway-hosted).
-  const apiEndpoint = `${process.env.API_URL}/chat`; // e.g., https://your-railway-app.com/chat
+  const apiEndpoint = `${process.env.VITE_API_URL}/chat`; // e.g., https://your-railway-app.com/chat
 
   try {
     // Make the API call to the /chat endpoint.
     const response = await fetch(apiEndpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
