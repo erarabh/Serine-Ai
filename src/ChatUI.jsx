@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown'; 
-export default function ChatUI() {
+import ReactMarkdown from 'react-markdown';
+import { sendChatMessage } from './BotLogic'; // Ensure BotLogic.js is in the same folder
 
+export default function ChatUI() {
+  // Initial state: a default welcome message from the bot
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi, I’m Serine AI. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Helper to save the last 5 messages to localStorage
+  const saveMessages = (msgs, max = 5) => {
+    const lastMessages = msgs.length <= max ? msgs : msgs.slice(-max);
+    localStorage.setItem("chatHistory", JSON.stringify(lastMessages));
+  };
 
-const saveMessages = (messages, max = 5) => {
-  const lastMessages = messages.length <= max ? messages : messages.slice(-max);
-  localStorage.setItem("chatHistory", JSON.stringify(lastMessages));
-};
-
+  // On mount, load chat history from localStorage if available
   useEffect(() => {
     const storedMessages = localStorage.getItem("chatHistory");
     if (storedMessages) {
@@ -21,65 +24,64 @@ const saveMessages = (messages, max = 5) => {
     }
   }, []);
 
-useEffect(() => {
-  const saveDelay = setTimeout(() => {
-    saveMessages(messages);
-  }, 500); 
-  return () => clearTimeout(saveDelay);
-  if (messages.length > 0) {
-    saveMessages(messages);
-  }
-}, [messages]);
+  // Debounce saving chats to localStorage when messages update
+  useEffect(() => {
+    const saveDelay = setTimeout(() => {
+      saveMessages(messages);
+    }, 500);
+    return () => clearTimeout(saveDelay);
+  }, [messages]);
 
-  const sendMessage = async () => {
-  if (!input.trim()) return;
-
-  const userMessage = { sender: 'user', text: input };
-  
-    setMessages(prevMessages => [...prevMessages, userMessage]);
-
-  setInput('');
-  setLoading(true);
-
+  // Retrieve the client ID from the embed code; fallback to a default if not found.
+  // (This assumes that on the client site your embed code adds a data attribute.)
+  let clientId;
   try {
-    const API_URL = import.meta.env.VITE_API_URL || "https://serine-ai-backend-production.up.railway.app";
-
-    
-    const startTime = performance.now();
-
-    const response = await fetch(`${API_URL}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [...messages, userMessage].map((msg) => ({
-          role: msg.sender === "user" ? "user" : "assistant",
-          content: msg.text,
-        })),
-      }),
-    });
-
-   
-    const endTime = performance.now();
-    console.log(`API Response Time: ${endTime - startTime}ms`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Server returned error:', response.status, errorText);
-      setMessages(prev => [...prev, { sender: 'bot', text: "I'm sorry, I didn't understand that. Can you rephrase?" }]);
-    } else {
-      
-      const data = await response.json();
-      const botReply = data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
-      setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
-    }
-  } catch (err) {
-    console.error('❌ API Error:', err);
-    setMessages(prev => [...prev, { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' }]);
+    clientId =
+      document.currentScript?.getAttribute("data-client-id") || "DEFAULT_CLIENT_ID";
+  } catch (error) {
+    clientId = "DEFAULT_CLIENT_ID";
   }
 
-  setLoading(false);
-};
+  // Retrieve any stored session ID (for anonymous visitor conversation context)
+  const storedSessionId = localStorage.getItem("sessionId");
 
+  // New sendMessage function uses BotLogic.js for API calls
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    const userMessageObj = { sender: 'user', text: input };
+
+    // Immediately update UI with user message
+    setMessages((prev) => [...prev, userMessageObj]);
+    const userInput = input; // preserve input before clearing
+    setInput('');
+    setLoading(true);
+
+    try {
+      // Call the BotLogic function with tenant information
+      const data = await sendChatMessage({
+        clientId,
+        sessionId: storedSessionId,
+        message: userInput,
+      });
+
+      // If the backend returns a new sessionId, store it locally
+      if (data.sessionId && !storedSessionId) {
+        localStorage.setItem("sessionId", data.sessionId);
+      }
+
+      // Get the bot's reply from the response, or fallback to a default error message
+      const botReply =
+        data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
+      setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: '⚠️ Error talking to server. Please try again later.' },
+      ]);
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4 min-h-screen bg-gray-50 text-gray-800">
@@ -95,9 +97,7 @@ useEffect(() => {
             }`}
           >
             {msg.sender === 'bot' ? (
-              <ReactMarkdown className="prose prose-sm">
-                {msg.text}
-              </ReactMarkdown>
+              <ReactMarkdown className="prose prose-sm">{msg.text}</ReactMarkdown>
             ) : (
               msg.text
             )}
@@ -107,26 +107,26 @@ useEffect(() => {
       {loading && <div className="mt-2 text-sm text-gray-500">Thinking...</div>}
       <div className="mt-4 flex gap-2">
         <input
-  value={input}
-  onChange={(e) => setInput(e.target.value)}
-  onKeyDown={(e) => {
-    
-    if (e.key === 'Enter' && !loading) {
-      sendMessage();
-    }
-  }}
-  disabled={loading}  
-  className="flex-1 border border-gray-300 rounded px-3 py-2"
-  placeholder="Type your question..."
-/>
-<button
-  onClick={sendMessage}
-  disabled={loading}  
-  className={`bg-blue-600 text-white px-4 py-2 rounded ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
->
-  Send
-</button>
-
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !loading) {
+              sendMessage();
+            }
+          }}
+          disabled={loading}
+          className="flex-1 border border-gray-300 rounded px-3 py-2"
+          placeholder="Type your question..."
+        />
+        <button
+          onClick={sendMessage}
+          disabled={loading}
+          className={`bg-blue-600 text-white px-4 py-2 rounded ${
+            loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+          }`}
+        >
+          Send
+        </button>
       </div>
     </div>
   );
