@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
 export default function Dashboard() {
-  // In a real system, the clientID would be stored in your client configuration. For now, we hard-code it.
-  const [clientId] = useState("CLIENT_ABC123");
+  // In a real system, the siteID would be stored in your client configuration. For now, we hard-code it.
+  const [siteID] = useState("CLIENT_ABC123");
   const [websiteURL, setWebsiteURL] = useState('');
   const [embedCode, setEmbedCode] = useState('');
 
   const handleGenerate = () => {
-    // The embed code now loads widget.js instead of chatbot.js.
+    // The embed code now loads widget.js and uses data-siteid and data-border-color attributes.
     const code = `
-<script src="https://serine-ai.vercel.app/widget.js" data-client-id="${clientId}" data-website-url="${websiteURL.trim()}"></script>
+<script src="https://serine-ai.vercel.app/widget.js" data-siteid="${siteID}" data-border-color="#00AAFF" data-website-url="${websiteURL.trim()}"></script>
     `.trim();
     setEmbedCode(code);
   };
@@ -49,7 +49,7 @@ export default function Dashboard() {
             rows="5"
           ></textarea>
           <p className="mt-2 text-sm text-gray-600">
-            Copy and paste this code snippet into your website (e.g., in your test-page.html) to embed the chatbot widget.
+            Copy and paste this code snippet into your website (e.g., in your test page) to embed the chat widget.
           </p>
         </div>
       )}
