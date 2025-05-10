@@ -7,9 +7,9 @@ export default function Dashboard() {
   const [embedCode, setEmbedCode] = useState('');
 
   const handleGenerate = () => {
-    // The embed code contains the chatbot script URL, your clientId, and optionally the website URL.
+    // The embed code now loads widget.js instead of chatbot.js.
     const code = `
-<script src="https://your-saas.com/chatbot.js" data-client-id="${clientId}" data-website-url="${websiteURL.trim()}"></script>
+<script src="https://serine-ai.vercel.app/widget.js" data-client-id="${clientId}" data-website-url="${websiteURL.trim()}"></script>
     `.trim();
     setEmbedCode(code);
   };
@@ -49,7 +49,7 @@ export default function Dashboard() {
             rows="5"
           ></textarea>
           <p className="mt-2 text-sm text-gray-600">
-            Copy and paste this code snippet into your website (e.g., in your test-page.html) to embed the chatbot.
+            Copy and paste this code snippet into your website (e.g., in your test-page.html) to embed the chatbot widget.
           </p>
         </div>
       )}
