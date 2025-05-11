@@ -8,15 +8,19 @@ const FAQAdmin = () => {
   // Fetch FAQs when the component mounts.
   useEffect(() => {
     axios.get('/faq')  // Ensure your backend proxy is set or use the full backend URL.
-      .then((res) => setFaqs(res.data))
+      .then((res) => {
+        // If res.data isn't an array, default to an empty array.
+        const faqArray = Array.isArray(res.data) ? res.data : [];
+        setFaqs(faqArray);
+      })
       .catch((err) => console.error('Error fetching FAQs:', err));
   }, []);
 
   const addFAQ = () => {
-    // Only add FAQ if both question and answer are non-empty.
     if (!newFAQ.question.trim() || !newFAQ.answer.trim()) return;
     axios.post('/faq', { ...newFAQ, clientId: 'CLIENT_ABC123' })
       .then((res) => {
+        // Append the new FAQ to the existing state.
         setFaqs(prev => [...prev, res.data]);
         setNewFAQ({ question: '', answer: '' });
       })
@@ -26,7 +30,7 @@ const FAQAdmin = () => {
   return (
     <div className="space-y-6">
       <ul className="divide-y divide-gray-200">
-        {faqs.map(faq => (
+        {Array.isArray(faqs) && faqs.map((faq) => (
           <li key={faq.id} className="py-4">
             <p className="font-medium text-gray-800">
               <span className="font-bold">Q:</span> {faq.question}
