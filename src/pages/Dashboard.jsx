@@ -1,16 +1,15 @@
+// src/pages/Dashboard.jsx
 import React, { useState } from 'react';
 import FAQAdmin from '../components/FAQAdmin';
 
 export default function Dashboard({ user }) {
-  // In production, the user object would come from authentication.
-  // Here we simulate admin access:
-  const isAdmin = user ? user.isAdmin : true; // For demo purposes, default to true
+  // Simulate admin access; in production, use your authentication logic.
+  const isAdmin = user ? user.isAdmin : true;
   const [siteID] = useState("CLIENT_ABC123");
   const [websiteURL, setWebsiteURL] = useState('');
   const [embedCode, setEmbedCode] = useState('');
 
   const handleGenerate = () => {
-    // Generate the embed code which loads widget.js with the correct data attributes.
     const code = `
 <script src="https://serine-ai.vercel.app/widget.js" data-siteid="${siteID}" data-border-color="#00AAFF" data-website-url="${websiteURL.trim()}"></script>
     `.trim();
@@ -20,13 +19,11 @@ export default function Dashboard({ user }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-6">
-        {/* Header */}
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-600">Manage your chatbot widget and website integration</p>
         </header>
 
-        {/* Embed Code Generator Section */}
         <section className="bg-white shadow rounded-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4">Embed Code Generator</h2>
           <div className="mb-4">
@@ -65,8 +62,7 @@ export default function Dashboard({ user }) {
           )}
         </section>
 
-        {/* FAQ Management Section – Only visible for admin users */}
-        { isAdmin && (
+        {isAdmin && (
           <section className="bg-white shadow rounded-lg p-6">
             <h2 className="text-2xl font-semibold mb-4">Manage FAQs</h2>
             <FAQAdmin />
