@@ -1,15 +1,16 @@
-// src/pages/Dashboard.jsx
 import React, { useState } from 'react';
-import FAQAdmin from '../components/FAQAdmin';
+import FAQAdmin from '../components/FAQAdmin.jsx';
 
 export default function Dashboard({ user }) {
-  // Simulate admin access; in production, use your authentication logic.
-  const isAdmin = user ? user.isAdmin : true;
+  // In a real system, the user object (with isAdmin flag) comes from authentication.
+  // For demo purposes, we assume the user is an admin.
+  const isAdmin = user ? user.isAdmin : true; 
   const [siteID] = useState("CLIENT_ABC123");
   const [websiteURL, setWebsiteURL] = useState('');
   const [embedCode, setEmbedCode] = useState('');
 
   const handleGenerate = () => {
+    // Embed code to load widget.js with required data attributes.
     const code = `
 <script src="https://serine-ai.vercel.app/widget.js" data-siteid="${siteID}" data-border-color="#00AAFF" data-website-url="${websiteURL.trim()}"></script>
     `.trim();
@@ -21,9 +22,10 @@ export default function Dashboard({ user }) {
       <div className="container mx-auto p-6">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600">Manage your chatbot widget and website integration</p>
+          <p className="text-gray-600">Manage your chatbot widget and website integration.</p>
         </header>
 
+        {/* Embed Code Generator Section */}
         <section className="bg-white shadow rounded-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4">Embed Code Generator</h2>
           <div className="mb-4">
@@ -56,12 +58,13 @@ export default function Dashboard({ user }) {
                 rows="5"
               />
               <p className="mt-2 text-sm text-gray-600">
-                Copy and paste this snippet into your website to embed the chat widget.
+                Copy and paste this snippet into your website (e.g., in your test page) to embed the chat widget.
               </p>
             </div>
           )}
         </section>
 
+        {/* FAQ Management Section (only visible for admin users) */}
         {isAdmin && (
           <section className="bg-white shadow rounded-lg p-6">
             <h2 className="text-2xl font-semibold mb-4">Manage FAQs</h2>

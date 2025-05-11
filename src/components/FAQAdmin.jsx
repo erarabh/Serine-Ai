@@ -5,7 +5,7 @@ const FAQAdmin = () => {
   const [faqs, setFaqs] = useState([]);
   const [newFAQ, setNewFAQ] = useState({ question: '', answer: '' });
 
-  // Fetch FAQs on component mount
+  // Fetch FAQs when the component mounts.
   useEffect(() => {
     axios.get('/faq')  // Ensure your backend proxy is set or use the full backend URL.
       .then((res) => setFaqs(res.data))
@@ -13,6 +13,7 @@ const FAQAdmin = () => {
   }, []);
 
   const addFAQ = () => {
+    // Only add FAQ if both question and answer are non-empty.
     if (!newFAQ.question.trim() || !newFAQ.answer.trim()) return;
     axios.post('/faq', { ...newFAQ, clientId: 'CLIENT_ABC123' })
       .then((res) => {
@@ -25,7 +26,7 @@ const FAQAdmin = () => {
   return (
     <div className="space-y-6">
       <ul className="divide-y divide-gray-200">
-        {faqs.map((faq) => (
+        {faqs.map(faq => (
           <li key={faq.id} className="py-4">
             <p className="font-medium text-gray-800">
               <span className="font-bold">Q:</span> {faq.question}
