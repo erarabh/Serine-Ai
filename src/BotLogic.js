@@ -51,4 +51,3 @@ export async function sendChatMessage({ clientId, sessionId, message }) {
     throw error;
   }
 }
-
