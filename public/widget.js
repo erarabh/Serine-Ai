@@ -115,4 +115,14 @@
     "widget.js loaded. window.showSerineWidget =",
     typeof window.showSerineWidget
   );
+  // Ensure widget.js automatically initializes the chatbot on page load
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Auto-initializing Serine AI widget...");
+  if (typeof window.showSerineWidget === "function") {
+    window.showSerineWidget();
+  } else {
+    console.error("❌ window.showSerineWidget is not available.");
+  }
+});
+
 })();
