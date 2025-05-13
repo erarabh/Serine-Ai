@@ -2,6 +2,7 @@
   const currentScript = document.currentScript;
   const siteID = currentScript?.getAttribute("data-siteid") || "default-site";
   const borderColor = currentScript?.getAttribute("data-border-color") || "#007BFF";
+  console.log("Widget siteID:", siteID);
 
   if (!siteID) {
     console.error("Widget: Missing data-siteid attribute");
