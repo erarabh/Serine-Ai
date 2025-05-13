@@ -3,20 +3,34 @@ import ReactMarkdown from 'react-markdown';
 import { sendChatMessage } from './BotLogic'; // Ensure BotLogic.js is in the same folder
 
 export default function ChatUI() {
-  // Initial state: a default welcome message from the bot
+  // Use state to store the clientId.
+  const [clientId, setClientId] = useState("DEFAULT_CLIENT_ID");
+
+  // On mount, extract the clientId from the URL query.
+  useEffect(() => {
+    // Extract the "siteid" query parameter from the URL
+    const params = new URLSearchParams(window.location.search);
+    const extractedClientId = params.get("siteid") || "DEFAULT_CLIENT_ID";
+    console.log("Extracted clientId from URL:", extractedClientId);
+    setClientId(extractedClientId);
+  }, []);
+
+  // Chat UI state and logic
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi, I’m Serine AI. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Helper to save the last 5 messages to localStorage
+													   
   const saveMessages = (msgs, max = 5) => {
     const lastMessages = msgs.length <= max ? msgs : msgs.slice(-max);
     localStorage.setItem("chatHistory", JSON.stringify(lastMessages));
+							 
+		   
   };
 
-  // On mount, load chat history from localStorage if available
+															   
   useEffect(() => {
     const storedMessages = localStorage.getItem("chatHistory");
     if (storedMessages) {
@@ -24,7 +38,7 @@ export default function ChatUI() {
     }
   }, []);
 
-  // Debounce saving chats to localStorage when messages update
+															   
   useEffect(() => {
     const saveDelay = setTimeout(() => {
       saveMessages(messages);
@@ -32,44 +46,44 @@ export default function ChatUI() {
     return () => clearTimeout(saveDelay);
   }, [messages]);
 
-  // Retrieve the client ID from the embed code; fallback to a default if not found.
-  // (This assumes that on the client site your embed code adds a data attribute.)
-  let clientId;
-  try {
-    clientId =
-      document.currentScript?.getAttribute("data-client-id") || "DEFAULT_CLIENT_ID";
-  } catch (error) {
-    clientId = "DEFAULT_CLIENT_ID";
-  }
+																					
+																				  
+			   
+	   
+			  
+																					
+				   
+								   
+   
 
-  // Retrieve any stored session ID (for anonymous visitor conversation context)
+																				
   const storedSessionId = localStorage.getItem("sessionId");
 
-  // New sendMessage function uses BotLogic.js for API calls
+															
   const sendMessage = async () => {
     if (!input.trim()) return;
     const userMessageObj = { sender: 'user', text: input };
 
-    // Immediately update UI with user message
+    // Update UI immediately
     setMessages((prev) => [...prev, userMessageObj]);
-    const userInput = input; // preserve input before clearing
+    const userInput = input;
     setInput('');
     setLoading(true);
 
     try {
-      // Call the BotLogic function with tenant information
-      const data = await sendChatMessage({
-        clientId,
+      // Build payload using the extracted clientId from state.
+      const payload = {
+        clientId, // This should now be the value from the URL (e.g., CLIENT_ABC123)
         sessionId: storedSessionId,
         message: userInput,
-      });
-
-      // If the backend returns a new sessionId, store it locally
+      };
+      console.log("Sending chat message with payload:", payload);
+      const data = await sendChatMessage(payload);
       if (data.sessionId && !storedSessionId) {
         localStorage.setItem("sessionId", data.sessionId);
       }
 
-      // Get the bot's reply from the response, or fallback to a default error message
+																					  
       const botReply =
         data?.message || "I'm sorry, I didn't understand that. Can you rephrase?";
       setMessages((prev) => [...prev, { sender: 'bot', text: botReply }]);
