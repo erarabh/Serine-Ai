@@ -1,10 +1,45 @@
-import React, { useState } from 'react';
+// /src/pages/Dashboard.jsx
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { supabase } from '../utils/supabaseClient'; // Ensure this file exists and is configured
 import FAQAdmin from '../components/FAQAdmin.jsx';
 
-export default function Dashboard({ user }) {
-  // In production, user data would be provided by authentication.
-  // Here, we simulate admin access for demonstration.
-  const isAdmin = user ? user.isAdmin : true; 
+export default function Dashboard() {
+  // Manage the authentication session locally.
+  const [session, setSession] = useState(null);
+  const router = useRouter();
+
+  // Check for a current session and listen for state changes.
+  useEffect(() => {
+    const currentSession = supabase.auth.session();
+    setSession(currentSession);
+
+    if (!currentSession) {
+      router.push('/Login');
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        router.push('/Login');
+      }
+    });
+
+    return () => {
+      authListener.unsubscribe();
+    };
+  }, [router]);
+
+  // While verifying authentication, show a loading message.
+  if (!session) {
+    return <p>Loading...</p>;
+  }
+
+  // Determine if the user is an admin.
+  // In production, you should check a real 'role' field. For now, we simulate admin access.
+  const isAdmin = session.user?.role === 'admin' || true;
+
+  // State for generating embed code for the widget.
   const [siteID] = useState("CLIENT_ABC123");
   const [websiteURL, setWebsiteURL] = useState('');
   const [embedCode, setEmbedCode] = useState('');
@@ -21,7 +56,9 @@ export default function Dashboard({ user }) {
       <div className="container mx-auto p-6">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600">Manage your chatbot widget and website integration.</p>
+          <p className="text-gray-600">
+            Welcome, {session.user.email}. Manage your chatbot widget and website integration.
+          </p>
         </header>
 
         <section className="bg-white shadow rounded-lg p-6 mb-8">
