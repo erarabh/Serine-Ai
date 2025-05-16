@@ -1,13 +1,12 @@
-// /src/pages/Dashboard.jsx
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { supabase } from '../utils/supabaseClient'; // Ensure this file exists and is configured
+import { useNavigate } from 'react-router-dom'; // Correct import for Vite-based routing
+import { supabase } from '../utils/supabaseClient'; // Ensure this file exists and is properly configured
 import FAQAdmin from '../components/FAQAdmin.jsx';
 
 export default function Dashboard() {
   // Manage the authentication session locally.
   const [session, setSession] = useState(null);
-  const router = useRouter();
+  const navigate = useNavigate(); // Replacing next/router with react-router-dom's useNavigate
 
   // Check for a current session and listen for state changes.
   useEffect(() => {
@@ -15,20 +14,20 @@ export default function Dashboard() {
     setSession(currentSession);
 
     if (!currentSession) {
-      router.push('/Login');
+      navigate("/login");
     }
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
-        router.push('/Login');
+        navigate("/login");
       }
     });
 
     return () => {
       authListener.unsubscribe();
     };
-  }, [router]);
+  }, [navigate]);
 
   // While verifying authentication, show a loading message.
   if (!session) {
@@ -36,13 +35,13 @@ export default function Dashboard() {
   }
 
   // Determine if the user is an admin.
-  // In production, you should check a real 'role' field. For now, we simulate admin access.
-  const isAdmin = session.user?.role === 'admin' || true;
+  // In production, check the user's role properly instead of defaulting to true.
+  const isAdmin = session.user?.role === "admin";
 
   // State for generating embed code for the widget.
   const [siteID] = useState("CLIENT_ABC123");
-  const [websiteURL, setWebsiteURL] = useState('');
-  const [embedCode, setEmbedCode] = useState('');
+  const [websiteURL, setWebsiteURL] = useState("");
+  const [embedCode, setEmbedCode] = useState("");
 
   const handleGenerate = () => {
     const code = `
