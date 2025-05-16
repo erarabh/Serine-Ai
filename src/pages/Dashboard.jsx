@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Correct import for Vite-based routing
-import { supabase } from '../utils/supabaseClient'; // Ensure this file exists and is properly configured
+import { supabase } from '../utils/supabaseClient.js'; // Ensure this file exists and is properly configured
 import FAQAdmin from '../components/FAQAdmin.jsx';
 
 export default function Dashboard() {
