@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build",  // Keep only one build command
     "lint": "eslint .",
-    "preview": "vite preview",
-	"build": "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY vite build"
+    "preview": "vite preview"
+																																	  
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
