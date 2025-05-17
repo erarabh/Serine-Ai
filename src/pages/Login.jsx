@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
 
@@ -7,7 +7,33 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        console.log("Fetched session:", data);
+        if (error) {
+          console.error("Error fetching session:", error);
+          return;
+        }
+        setSession(data.session);
+        if (data.session) {
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      }
+    }
+
+    checkSession();
+  }, [navigate]);
+
+  if (session) {
+    return <p>Redirecting...</p>;
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,8 +52,10 @@ export default function Login() {
         return;
       }
 
+      console.log("Login successful. Session:", data.session);
+
       if (data.session) {
-        navigate("/dashboard"); // Navigate only if session exists
+        navigate("/dashboard");
       }
     } catch (err) {
       console.error("Unexpected error:", err);
