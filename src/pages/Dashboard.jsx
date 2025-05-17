@@ -1,21 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Correct import for Vite-based routing
-import { supabase } from '../utils/supabaseClient.js'; // Ensure this file exists and is properly configured
-import FAQAdmin from '../components/FAQAdmin.jsx';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Using react-router-dom for navigation
+import { supabase } from "../utils/supabaseClient"; // Ensure this file exists and is properly configured
+import FAQAdmin from "../components/FAQAdmin.jsx";
 
 export default function Dashboard() {
   // Manage the authentication session locally.
   const [session, setSession] = useState(null);
-  const navigate = useNavigate(); // Replacing next/router with react-router-dom's useNavigate
+  const navigate = useNavigate();
 
   // Check for a current session and listen for state changes.
   useEffect(() => {
-    const currentSession = supabase.auth.getSession();
-    setSession(currentSession);
-
-    if (!currentSession) {
-      navigate("/login");
+    async function fetchSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error fetching session:", error);
+          return;
+        }
+        setSession(data.session);
+        if (!data.session) {
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      }
     }
+
+    fetchSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
