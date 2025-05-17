@@ -18,6 +18,8 @@ export default defineConfig({
   },
   define: {
     "process.env.VITE_API_URL": JSON.stringify("https://serine-ai-backend-production.up.railway.app"),
+	"process.env.NEXT_PUBLIC_SUPABASE_URL": JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    "process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY": JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
   },		   
 });
 
