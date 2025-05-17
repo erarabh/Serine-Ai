@@ -10,7 +10,7 @@ export default function Dashboard() {
 
   // Check for a current session and listen for state changes.
   useEffect(() => {
-    const currentSession = supabase.auth.session();
+    const currentSession = supabase..auth.getSession();
     setSession(currentSession);
 
     if (!currentSession) {
